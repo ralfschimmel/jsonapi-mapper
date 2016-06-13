@@ -34,7 +34,7 @@ export default class Bookshelf implements I.Mapper {
    * @param bookshelfOptions
    * @param template
    */
-  mapRelations(model: any, type: string, bookshelfOptions: I.BookshelfOptions = {relations: true}, template?: Serializer.ISerializerOptions): any {
+  mapRelations(model: any, type: string, bookshelfOptions: I.BookshelfOptions = {relations: true}, template?: ISerializerOptions): any {
     let self: this = this;
     _.forOwn(model.relations, function (relModel: Model, relName: string): void {
 
@@ -47,7 +47,7 @@ export default class Bookshelf implements I.Mapper {
         }
 
         // Avoid duplicates
-        if (!_.include(template.attributes, relName)) {
+        if (!_.includes(template.attributes, relName)) {
           // Add relation to attribute list
           template.attributes.push(relName);
         }
