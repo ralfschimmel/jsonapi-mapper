@@ -60,7 +60,7 @@ export default class Bookshelf implements I.Mapper {
         }
 
         // recurse to add nested relations
-        self.mapRelations(relModel, type, bookshelfOptions, template[relName]);
+        self.mapRelations(relModel, relName, bookshelfOptions, template[relName]);
     });
   }
 
@@ -81,13 +81,13 @@ export default class Bookshelf implements I.Mapper {
     template.topLevelLinks = links.buildTop(self.baseUrl, type, bookshelfOptions.pagination, bookshelfOptions.query);
     template.dataLinks = links.buildSelf(self.baseUrl, type, null, bookshelfOptions.query);
 
-    // Provide support for withRelated option TODO WARNING DEPRECATED. To be deleted on next major version
-    if (bookshelfOptions.includeRelations) bookshelfOptions.relations = bookshelfOptions.includeRelations;
-
     // Serializer process for a Model
     if (isModel(data)) {
       // Add list of valid attributes
       template.attributes = utils.getDataAttributesList(data);
+
+      // Provide support for withRelated option TODO WARNING DEPRECATED. To be deleted on next major version
+      if (bookshelfOptions.includeRelations) bookshelfOptions.relations = bookshelfOptions.includeRelations;
 
       // Add relations (only if permitted)
       if (bookshelfOptions.relations) {
@@ -103,6 +103,9 @@ export default class Bookshelf implements I.Mapper {
 
         // Add list of valid attributes
         template.attributes = utils.getDataAttributesList(model);
+
+        // Provide support for withRelated option TODO WARNING DEPRECATED. To be deleted on next major version
+        if (bookshelfOptions.includeRelations) bookshelfOptions.relations = bookshelfOptions.includeRelations;
 
         data.forEach((model) => {
           self.mapRelations(model, type, bookshelfOptions, template);
