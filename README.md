@@ -74,11 +74,12 @@ mapper#map(data, type, mapperOptions)
 - _(optional)_ `mapperOptions` _(object)_:
   - _(optional)_ `relations` _(boolean | string[])_: flag to disable serializing related models on the response. Alternatively, you can provide a string array to indicate the specific relations you want to serialize. By default, all relations loaded on the model are serialized (true).
   - _(optional)_ `includeRelations` _(boolean | string[])_ (deprecated): alias option of relations option.
+  - _(optional)_ `disableLinks` _(boolean)_: disables the generation of all links in the payload. This may be useful if the consuming system doesn't take advantage of links and you want to save on payload size and maybe a bit of performance. Defaults to `false`
   - _(optional)_ `query` _(object)_: an object containing the original query parameters. these will be appended to `self` and pagination links. Developer Note: this is not fully implemented yet, but following releases will fix that.*
   - _(optional)_ `pagination` _(object)_: pagination-related parameters for building pagination links for collections.
     - _(required)_ `offset` _(integer)_
     - _(required)_ `limit` _(integer)_
-    - _(optional)_ `total` _(integer)_
+    - _(optional)_ `total` or `rowCount` _(integer)_
 
 # How can I contribute?
 The project is very open to collaboration from the public, especially on providing the groundwork for other ORM's (like [Sequelize](http://docs.sequelizejs.com/) or [Mongoose](http://mongoosejs.com/)). Just open a PR!

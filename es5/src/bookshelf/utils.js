@@ -11,14 +11,17 @@ var links = require('./links');
  * @param included
  * @returns serializer.ISerializerOptions
  */
-function buildRelation(baseUrl, modelType, relatedType, relatedKeys, included) {
-    return {
+function buildRelation(baseUrl, modelType, relatedType, relatedKeys, included, disableLinks) {
+    var r = {
         ref: 'id',
         attributes: relatedKeys,
-        relationshipLinks: links.buildRelationship(baseUrl, modelType, relatedType),
-        includedLinks: links.buildSelf(baseUrl, modelType, relatedType),
         included: included
     };
+    if (!disableLinks) {
+        r.relationshipLinks = links.buildRelationship(baseUrl, modelType, relatedType);
+        r.includedLinks = links.buildSelf(baseUrl, modelType, relatedType);
+    }
+    return r;
 }
 exports.buildRelation = buildRelation;
 /**

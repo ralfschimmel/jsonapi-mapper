@@ -41,7 +41,7 @@ var Bookshelf = (function () {
             // Apply relation attributes
             if (template[relName] === undefined || _.isEmpty(template[relName].attributes)) {
                 // Add relation serialization
-                template[relName] = utils.buildRelation(self.baseUrl, type, relName, utils.getDataAttributesList(relModel), true);
+                template[relName] = utils.buildRelation(self.baseUrl, type, relName, utils.getDataAttributesList(relModel), true, bookshelfOptions.disableLinks);
             }
             // recurse to add nested relations
             self.mapRelations(relModel, relName, bookshelfOptions, template[relName]);
@@ -60,8 +60,10 @@ var Bookshelf = (function () {
         var self = this;
         var template = {};
         // Build links objects
-        template.topLevelLinks = links.buildTop(self.baseUrl, type, bookshelfOptions.pagination, bookshelfOptions.query);
-        template.dataLinks = links.buildSelf(self.baseUrl, type, null, bookshelfOptions.query);
+        if (!bookshelfOptions.disableLinks) {
+            template.topLevelLinks = links.buildTop(self.baseUrl, type, bookshelfOptions.pagination, bookshelfOptions.query);
+            template.dataLinks = links.buildSelf(self.baseUrl, type, null, bookshelfOptions.query);
+        }
         // Serializer process for a Model
         if (extras_1.isModel(data)) {
             // Add list of valid attributes

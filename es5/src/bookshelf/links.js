@@ -15,9 +15,17 @@ function buildTop(baseUrl, type, pag, query) {
     var obj = {
         self: baseUrl + '/' + inflection.pluralize(type)
     };
-    // Add pagination if given
-    if (pag)
-        _.assign(obj, buildPagination(baseUrl, type, pag, query));
+    // Only build pagination if pagination data was passed.
+    if (pag) {
+        // Support Bookshelf's built-in paging parameters
+        if (pag.rowCount)
+            pag.total = pag.rowCount;
+        // Add pagination if total records is greater than 0
+        // and total records is less than limit.
+        if (pag.total > 0 && pag.total > pag.limit) {
+            _.assign(obj, buildPagination(baseUrl, type, pag, query));
+        }
+    }
     return obj;
 }
 exports.buildTop = buildTop;
@@ -34,42 +42,36 @@ function buildPagination(baseUrl, type, pag, query) {
     var baseLink = baseUrl + '/' + inflection.pluralize(type);
     query = _.omit(query, 'page');
     var queryStr = Qs.stringify(query, { encode: false });
-    return {
-        first: function () {
+    var pagingLinks = {};
+    if (pag.offset > 0) {
+        pagingLinks.first = function () {
             return baseLink +
                 '?page[limit]=' + pag.limit +
                 '&page[offset]=0' +
                 queryStr;
-        },
-        prev: function () {
-            // No previous if its the first
-            if (pag.offset === 0)
-                return null;
+        };
+        pagingLinks.prev = function () {
             return baseLink +
                 '?page[limit]=' + pag.limit +
                 '&page[offset]=' + (pag.offset - pag.limit) +
                 queryStr;
-        },
-        next: function (collection) {
-            // No next if its the last
-            if (collection.length < pag.limit ||
-                (pag.total && pag.offset + pag.limit >= pag.total))
-                return null;
+        };
+    }
+    if (pag.total && (pag.offset + pag.limit < pag.total)) {
+        pagingLinks.next = function (collection) {
             return baseLink +
                 '?page[limit]=' + pag.limit +
                 '&page[offset]=' + (pag.offset + pag.limit) +
                 queryStr;
-        },
-        last: function () {
-            // No last if no total to compare
-            if (!pag.total)
-                return null;
+        };
+        pagingLinks.last = function () {
             return baseLink +
                 '?page[limit]=' + pag.limit +
                 '&page[offset]=' + (pag.total - pag.limit) +
                 queryStr;
-        }
-    };
+        };
+    }
+    return !_.isEmpty(pagingLinks) ? pagingLinks : undefined;
 }
 exports.buildPagination = buildPagination;
 /**

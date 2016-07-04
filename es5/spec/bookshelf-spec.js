@@ -498,6 +498,135 @@ describe('Bookshelf links', function () {
         };
         expect(_.matches(expected)(result)).toBe(true);
     });
+    it('should not add pagination links if no pagination data is passed', function () {
+        var limit = 10;
+        var offset = 40;
+        var total = 100;
+        var elements = _.range(10).map(function (num) {
+            return bookshelf.Model.forge({ id: num, attr: 'value' + num });
+        });
+        var collection = bookshelf.Collection.forge(elements);
+        var result = mapper.map(collection, 'models');
+        expect(result.links).toBeDefined();
+        expect(Object.keys(result.links)).not.toContain('prev');
+        expect(Object.keys(result.links)).not.toContain('first');
+        expect(Object.keys(result.links)).not.toContain('next');
+        expect(Object.keys(result.links)).not.toContain('last');
+    });
+    it('should support bookshelf\'s new `rowCount` property passed by `Model#fetchPage`', function () {
+        var limit = 10;
+        var offset = 40;
+        var total = 100;
+        var elements = _.range(10).map(function (num) {
+            return bookshelf.Model.forge({ id: num, attr: 'value' + num });
+        });
+        var collection = bookshelf.Collection.forge(elements);
+        var result = mapper.map(collection, 'models', {
+            pagination: {
+                limit: limit,
+                offset: offset,
+                rowCount: total
+            }
+        });
+        var expected = {
+            links: {
+                first: domain + '/models?page[limit]=' + limit + '&page[offset]=' + 0,
+                prev: domain + '/models?page[limit]=' + limit + '&page[offset]=' + (offset - limit),
+                next: domain + '/models?page[limit]=' + limit + '&page[offset]=' + (offset + limit),
+                last: domain + '/models?page[limit]=' + limit + '&page[offset]=' + (total - limit)
+            }
+        };
+        expect(_.matches(expected)(result)).toBe(true);
+    });
+    it('should omit `first` and `prev` pagination links if offset = 0', function () {
+        var limit = 5;
+        var offset = 0;
+        var total = 10;
+        var collection = bookshelf.Collection.forge([]);
+        var result = mapper.map(collection, 'models', {
+            pagination: {
+                limit: limit,
+                offset: offset,
+                total: total
+            }
+        });
+        expect(result.links).toBeDefined();
+        expect(Object.keys(result.links)).not.toContain('first');
+        expect(Object.keys(result.links)).not.toContain('prev');
+        expect(Object.keys(result.links)).toContain('next');
+        expect(Object.keys(result.links)).toContain('last');
+    });
+    it('should omit `next` and `last` pagination links if at last page', function () {
+        var limit = 5;
+        var offset = 5;
+        var total = 10;
+        var collection = bookshelf.Collection.forge([]);
+        var result = mapper.map(collection, 'models', {
+            pagination: {
+                limit: limit,
+                offset: offset,
+                total: total
+            }
+        });
+        expect(result.links).toBeDefined();
+        expect(Object.keys(result.links)).toContain('first');
+        expect(Object.keys(result.links)).toContain('prev');
+        expect(Object.keys(result.links)).not.toContain('next');
+        expect(Object.keys(result.links)).not.toContain('last');
+    });
+    it('should not add pagination links if collection is empty', function () {
+        var limit = 10;
+        var offset = 40;
+        var total = 0;
+        var collection = bookshelf.Collection.forge([]);
+        var result = mapper.map(collection, 'models', {
+            pagination: {
+                limit: limit,
+                offset: offset,
+                total: total
+            }
+        });
+        expect(result.links).toBeDefined();
+        expect(Object.keys(result.links)).not.toContain('prev');
+        expect(Object.keys(result.links)).not.toContain('first');
+        expect(Object.keys(result.links)).not.toContain('next');
+        expect(Object.keys(result.links)).not.toContain('last');
+    });
+    it('should not add pagination links if total <= limit', function () {
+        var limit = 10;
+        var offset = 0;
+        var total = 5;
+        var elements = _.range(total).map(function (num) {
+            return bookshelf.Model.forge({ id: num, attr: 'value' + num });
+        });
+        var collection = bookshelf.Collection.forge(elements);
+        var result = mapper.map(collection, 'models', {
+            pagination: {
+                limit: limit,
+                offset: offset,
+                total: total
+            }
+        });
+        expect(result.links).toBeDefined();
+        expect(Object.keys(result.links)).not.toContain('prev');
+        expect(Object.keys(result.links)).not.toContain('first');
+        expect(Object.keys(result.links)).not.toContain('next');
+        expect(Object.keys(result.links)).not.toContain('last');
+    });
+    it('does not serialize links when `disableLinks: true`', function () {
+        var model1 = bookshelf.Model.forge({ id: '5', attr: 'value' });
+        var model2 = bookshelf.Model.forge({ id: '6', attr: 'value' });
+        model1.relations['related-model'] = model2;
+        model2.relations['nested-related-models'] = bookshelf.Collection.forge([
+            bookshelf.Model.forge({ id: '10', attr: 'value' })
+        ]);
+        var collection = bookshelf.Collection.forge([model1]);
+        var result = mapper.map(collection, 'models', { disableLinks: true });
+        expect(result.links).not.toBeDefined();
+        expect(result.data[0].relationships['related-model'].links).not.toBeDefined();
+        expect(result.included[0].links).not.toBeDefined();
+        expect(result.included[1].links).not.toBeDefined();
+    });
 });
 describe('Bookshelf relations', function () {
     var bookshelf;
